@@ -1,0 +1,4 @@
+cx-Oracle==8.0.1
+pkg-resources==0.0.0
+pymongo==3.11.1
+shortuuid==1.0.1
