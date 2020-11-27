@@ -1,8 +1,8 @@
 ora_user = 'system'
-ora_password = 'WVh1bXl1qQNk'
-ora_ip = '192.168.231.55'
+ora_password = ''
+ora_ip = ''
 ora_port = 1521
-sid = 'busdb'
+sid = ''
 
 mongodb_conn_string = 'mongodb://mongo_rw:mongo_rw@localhost:27017/'
 mongodb_db = 'db1'
@@ -12,7 +12,3 @@ sql_get_data = u"SELECT DOCUMENT_IDENTIFIER, BODY FROM FKS_SAVEPOINTS.DOCUMENT w
 sql_update_uid = "UPDATE FKS_SAVEPOINTS.DOCUMENT SET NOSQL_UID = :1 where id = :2"
 num_rows_fetch = 5
 
-#PAK
-#ora_password = 'yMZQgfvMzbAwq0AW'
-#ora_ip = '10.141.84.62'
-#sid = 'fksbusdb'
