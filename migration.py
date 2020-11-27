@@ -19,7 +19,6 @@ def create_ora_conn(ora_user: str,
         raise Exception("could not create a connection to Oracle database")
     return oracle_conn
 
-
 def create_mongo_conn(mongodb_conn_string: str,
                       mongodb_db: str):
 
