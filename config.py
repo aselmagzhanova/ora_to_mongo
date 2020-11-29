@@ -12,4 +12,3 @@ sql_get_bounds = u"SELECT start_id, end_id FROM FKS_SAVEPOINTS.DOCUMENT_MIGRATE_
 sql_update_uid = "UPDATE FKS_SAVEPOINTS.DOCUMENT SET NOSQL_UID = :1 where id = :2"
 num_rows_fetch = 5
 num_threads = 5
-
