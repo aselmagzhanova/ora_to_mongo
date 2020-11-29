@@ -3,7 +3,7 @@ from oracle_to_mongo import config
 from pymongo import MongoClient
 import gridfs
 from datetime import datetime
-from multiprocessing import Pool
+from multiprocessing import Process
 
 def create_ora_conn(ora_user: str,
                     ora_password: str,
@@ -38,66 +38,57 @@ def close_mongo_conn(mongodb_client):
     if mongodb_client is not None:
         mongodb_client.close()
 
-def migrate(id: int):
+def migrate(thread_num: int):
 
     error_exception = None
 
     try:
-        oracle_conn_cur = create_ora_conn(config.ora_user, config.ora_password, config.ora_ip, config.ora_port, config.sid)
+        oracle_conn = create_ora_conn(config.ora_user, config.ora_password, config.ora_ip, config.ora_port, config.sid)
         mongodb_client, mongodb_db = create_mongo_conn(config.mongodb_conn_string, config.mongodb_db)
-        cursor_cur = oracle_conn_cur.cursor()
-        cursor_cur.execute(config.sql_get_data, [id])
-        document_identifier, data = cursor_cur.fetchone()
+        cursor_bounds = oracle_conn.cursor()
+        cursor_bounds.execute(config.sql_get_bounds, [thread_num])
+        start_id, end_id = cursor_bounds.fetchone()
+        cursor_bounds.close()
         fs = gridfs.GridFS(mongodb_db, collection='nrgEvent', disable_md5=True)
-        _id = fs.put(filename=document_identifier, data=data.read(), metadata={"documentType": "nrgEvent"})
-        uid_update(str(_id), id, oracle_conn_cur)
-        cursor_cur.close()
-        close_ora_conn(oracle_conn_cur)
+        cursor = oracle_conn.cursor()
+        cursor.execute(config.sql_query, [start_id, end_id])
+        id, document_identifier, data = cursor.fetchone()
+        while (id is not None):
+            _id = fs.put(filename=document_identifier, data=data.read(), metadata={"documentType": "nrgEvent"})
+            uid_update(str(_id), id, oracle_conn)
+            id, document_identifier, data = cursor.fetchone()
+        cursor.close()
+        close_ora_conn(oracle_conn)
         close_mongo_conn(mongodb_client)
     except cx_Oracle.Error as error:
         error_exception = error
         print(error_exception)
 
-def uid_update(_id: str, id: int, oracle_conn_cur):
-    cursor_upd = oracle_conn_cur.cursor()
+def uid_update(_id: str, id: int, oracle_conn):
+    cursor_upd = oracle_conn.cursor()
     cursor_upd.execute(config.sql_update_uid, [_id, id])
-    oracle_conn_cur.commit()
+    oracle_conn.commit()
     cursor_upd.close()
+    return cursor_upd
 
 if __name__ == '__main__':
 
     startTime = datetime.now()
 
-    oracle_conn = create_ora_conn(config.ora_user,
-                                  config.ora_password,
-                                  config.ora_ip,
-                                  config.ora_port,
-                                  config.sid)
-    cursor = oracle_conn.cursor()
-    cursor.execute(config.sql_query)
-    rows = cursor.fetchmany(config.num_rows_fetch)
-    while len(rows) > 0:
-        # fetch next rows
-        ids = [row[0] for row in rows]
-        pool = Pool(4)
-        results = pool.map(migrate, ids)
-        pool.close()
-        pool.join()
-        rows = cursor.fetchmany(config.num_rows_fetch)
+    procs = []
 
-    cursor.close()
+    for i in range(config.num_threads):
+        proc = Process(target=migrate, args=(i,))
+        procs.append(proc)
+        proc.start()
+
+    for proc in procs:
+        proc.join()
+
+    for i in range(config.num_threads):
+        print(i)
+
     endTime = datetime.now()
     print ("Время выполнения: ", endTime - startTime)
 
-    close_ora_conn(oracle_conn)
 
-
-'''
-#one thread working
-    cursor = oracle_conn.cursor()
-    cursor.execute(config.sql_query)
-    rows = cursor.fetchall()
-    ids = [row[0] for row in rows]
-    for id in ids:
-        migrate(id)
-'''
