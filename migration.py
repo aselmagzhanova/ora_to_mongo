@@ -85,8 +85,6 @@ if __name__ == '__main__':
     for proc in procs:
         proc.join()
 
-    for i in range(config.num_threads):
-        print(i)
 
     endTime = datetime.now()
     print ("Время выполнения: ", endTime - startTime)
