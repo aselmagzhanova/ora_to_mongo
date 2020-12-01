@@ -52,13 +52,11 @@ def migrate(thread_num: int):
         fs = gridfs.GridFS(mongodb_db, collection='nrgEvent', disable_md5=True)
         cursor = oracle_conn.cursor()
         cursor.execute(config.sql_query, [start_id, end_id])
-        while True:
-            data_row = cursor.fetchone()
-            if data_row is None:
-                break
-            id, document_identifier, data = data_row[0], data_row[1], data_row[2].read()
-            _id = fs.put(filename=document_identifier, data=data, metadata={"documentType": "nrgEvent"})
+        id, document_identifier, data = cursor.fetchone()
+        while (id is not None):
+            _id = fs.put(filename=document_identifier, data=data.read(), metadata={"documentType": "nrgEvent"})
             uid_update(str(_id), id, oracle_conn)
+            id, document_identifier, data = cursor.fetchone()
         cursor.close()
         close_ora_conn(oracle_conn)
         close_mongo_conn(mongodb_client)
@@ -86,6 +84,9 @@ if __name__ == '__main__':
 
     for proc in procs:
         proc.join()
+
+    for i in range(config.num_threads):
+        print(i)
 
     endTime = datetime.now()
     print ("Время выполнения: ", endTime - startTime)
