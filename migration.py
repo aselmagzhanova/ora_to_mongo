@@ -44,6 +44,7 @@ def migrate(thread_num: int):
 
     try:
         oracle_conn = create_ora_conn(config.ora_user, config.ora_password, config.ora_ip, config.ora_port, config.sid)
+        oracle_conn.autocommit = True
         mongodb_client, mongodb_db = create_mongo_conn(config.mongodb_conn_string, config.mongodb_db)
         cursor_bounds = oracle_conn.cursor()
         cursor_bounds.execute(config.sql_get_bounds, [thread_num])
@@ -69,7 +70,6 @@ def migrate(thread_num: int):
 def uid_update(_id: str, id: int, oracle_conn):
     cursor_upd = oracle_conn.cursor()
     cursor_upd.execute(config.sql_update_uid, [_id, id])
-    oracle_conn.commit()
     cursor_upd.close()
     return cursor_upd
 
@@ -89,5 +89,3 @@ if __name__ == '__main__':
 
     endTime = datetime.now()
     print ("Время выполнения: ", endTime - startTime)
-
-
