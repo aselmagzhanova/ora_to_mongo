@@ -1,6 +1,6 @@
 ora_user = 'system'
-ora_password = 'WVh1bXl1qQNk'
-ora_ip = '192.168.231.55'
+ora_password = '*'
+ora_ip = '*'
 ora_port = 1521
 sid = 'busdb'
 
@@ -12,11 +12,3 @@ sql_update_uid = "UPDATE FKS_SAVEPOINTS.DOCUMENT SET NOSQL_UID = :1 where id = :
 num_threads = 5
 
 
-#PAK
-#ora_password = 'yMZQgfvMzbAwq0AW'
-#ora_ip = '10.141.84.62'
-#sid = 'fksbusdb'
-
-
-#mongodb_conn_string = 'mongodb://mongo_rw:mongo_rw@eis-mongo-gisnr01.eis3.fk.dks.lanit.ru:26000/'
-#mongodb_db = 'BUS_STORAGE'
